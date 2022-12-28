@@ -5,29 +5,15 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "erc721a/contracts/ERC721A.sol";
 
 contract ArtfiNFT is Ownable, ERC721A {
-    mapping(uint => NftMeta) public nftMeta;
-    struct NftMeta {
-        uint fraction;
-        uint parentId;
-    }
-
     bool public mintPaused;
-
     address public whitelist;
-
-    string private _baseTokenURI;
 
     event MintPaused(bool);
 
     /**
-     * @notice Construct
+     * @notice Constructor
      */
     constructor() ERC721A("Artfi", "ARTFI") {}
-
-    modifier onlyWhitelist {
-        require(msg.sender == whitelist, "Not allowed");
-        _;
-    }
 
     /**
      * @notice Set whitelist
@@ -48,28 +34,15 @@ contract ArtfiNFT is Ownable, ERC721A {
     }
 
     /**
-     * @notice Set BaseURI
-     * @param baseURI  String of BaseURI
-     */
-    function setBaseURI(string calldata baseURI) external onlyOwner {
-        _baseTokenURI = baseURI;
-    }
-
-    /**
-     * @notice View function to get BaseURI
-     */
-    function _baseURI() internal view override returns (string memory) {
-        return _baseTokenURI;
-    }
-
-    /**
      * @notice Mint nft
      * @param to  Address of receiver
      * @param quantity  Amount of NFT to mint
      */
-    function mint(address to, uint256 quantity) external onlyWhitelist {
+    function mint(address to, uint256 quantity) external returns(uint _tokenId) {
+        require(msg.sender == whitelist, "Not allowed");
         require(!mintPaused, "Mint is paused");
 
+        _tokenId = _nextTokenId();
         _mint(to, quantity);
     }
 }
