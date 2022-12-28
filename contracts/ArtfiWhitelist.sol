@@ -188,7 +188,7 @@ contract ArtfiWhitelist is Ownable, EIP712, ReentrancyGuard {
      */
     function claim(bytes32 _whitelist) external nonReentrant {
         UserInfo storage user = userInfo[msg.sender][_whitelist];
-        require(user.amount != 0, "Not whitelisted");
+        require(user.price != 0, "Not whitelisted");
         require(user.stat == Stat.Deposit, "Can not withdraw");
 
         Whitelist storage info = whitelist[_whitelist];
@@ -196,10 +196,10 @@ contract ArtfiWhitelist is Ownable, EIP712, ReentrancyGuard {
 
         user.stat = Stat.Claim;
         if(user.token == wmatic) {
-            (bool success, ) = payable(msg.sender).call{value: user.amount}("");
+            (bool success, ) = payable(msg.sender).call{value: user.price}("");
             require(success, "Failed to send matic");
         } else {
-            IERC20(user.token).safeTransfer(msg.sender, user.amount);
+            IERC20(user.token).safeTransfer(msg.sender, user.price);
         }
 
         emit Claim(msg.sender, _whitelist);
