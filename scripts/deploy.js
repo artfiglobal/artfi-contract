@@ -20,7 +20,7 @@ async function main() {
     await artfiWhitelist.deployed();
 
     // add mocktoken
-    this.artfiWhitelist.connect(owner).updateToken(this.mockToken.address, true);
+    artfiWhitelist.connect(owner).updateToken(this.mockToken.address, true);
 
     console.log(`MockToken: ${mockToken.address}`)
     console.log(`ArtfiNFT: ${artfiNFT.address}`)

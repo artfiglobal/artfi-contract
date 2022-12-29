@@ -28,7 +28,6 @@ module.exports = {
     }
   },
   etherscan: {
-    // bnb network
     apiKey: keyConfig.scan_key,
   },
 };
