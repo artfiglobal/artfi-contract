@@ -131,13 +131,13 @@ contract ArtfiWhitelist is Ownable, EIP712, ReentrancyGuard {
     function _verify(
         address _user,
         uint256 _price,
-        bytes memory _signature,
-        string memory _fractions
+        string calldata _fractions,
+        bytes calldata _signature
     ) private view returns (bool) {
         bytes32 digest = _hashTypedDataV4(keccak256(abi.encode(
-            keccak256("Fraction(address walletAddress, string fractionInfo, uint256 price)"),
+            keccak256("Fraction(address walletAddress,string fractionInfo,uint256 price)"),
             _user,
-            _fractions,
+            keccak256(abi.encodePacked(_fractions)),
             _price
         )));
 
@@ -155,20 +155,20 @@ contract ArtfiWhitelist is Ownable, EIP712, ReentrancyGuard {
         address _token,
         uint256 _price,
         bytes32 _whitelist,
-        string memory _fractions,
+        string calldata _fractions,
         bytes calldata _signature
     ) external payable nonReentrant {
         require(payToken[_token], "Invalid token");
 
-        Whitelist storage info = whitelist[_whitelist];
-        require(info.startTime <= block.timestamp && 
-            info.startTime + info.lockTime >= block.timestamp, "Invalid whitelist");
+        // Whitelist storage info = whitelist[_whitelist];
+        // require(info.startTime <= block.timestamp && 
+        //     info.startTime + info.lockTime >= block.timestamp, "Invalid whitelist");
 
         string[] memory fractions = _fractions.split(",");
         uint256 _amount = fractions.length;
         require(_amount > 0, "Invalid fractions");
 
-        require(_verify(msg.sender, _price, _signature, _fractions), "Invalid signature");
+        require(_verify(msg.sender, _price, _fractions, _signature), "Invalid signature");
 
         // receive token
         if(_token == wmatic) require(msg.value == _price, "Invalid matic");
