@@ -118,7 +118,7 @@ contract ArtfiWhitelist is Ownable, EIP712, ReentrancyGuard {
         address _token,
         uint _amount
     ) private {
-
+        
     }
 
     /**

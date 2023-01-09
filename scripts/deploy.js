@@ -4,27 +4,31 @@ async function main() {
     const [owner] = await ethers.getSigners();
     const whitelister = "0x556EF0b2a6c59b3151fFc1e90fa057dF75EB43d3";
 
-    const MockToken = await ethers.getContractFactory("MockToken");
-    const mockToken = await MockToken.deploy();
-    await mockToken.deployed();
+    const MockUSDT = await ethers.getContractFactory("MockUSDT");
+    const mockUSDT = await MockUSDT.deploy();
+    await mockUSDT.deployed();
 
-    const ArtfiNFT = await ethers.getContractFactory("ArtfiNFT");
-    const artfiNFT = await ArtfiNFT.deploy();
-    await artfiNFT.deployed();
+    // const MockUSDC = await ethers.getContractFactory("MockUSDC");
+    // const mockUSDC = await MockUSDC.deploy();
+    // await mockUSDC.deployed();
 
-    const ArtfiWhitelist = await ethers.getContractFactory("ArtfiWhitelist");
-    const artfiWhitelist = await ArtfiWhitelist.deploy(
-        artfiNFT.address,
-        whitelister
-    );
-    await artfiWhitelist.deployed();
+    // const ArtfiNFT = await ethers.getContractFactory("ArtfiNFT");
+    // const artfiNFT = await ArtfiNFT.deploy();
+    // await artfiNFT.deployed();
 
-    // add mocktoken
-    artfiWhitelist.connect(owner).updateToken(this.mockToken.address, true);
+    // const ArtfiWhitelist = await ethers.getContractFactory("ArtfiWhitelist");
+    // const artfiWhitelist = await ArtfiWhitelist.deploy(
+    //     artfiNFT.address,
+    //     whitelister
+    // );
+    // await artfiWhitelist.deployed();
 
-    console.log(`MockToken: ${mockToken.address}`)
-    console.log(`ArtfiNFT: ${artfiNFT.address}`)
-    console.log(`ArtfiWhitelist: ${artfiWhitelist.address}`)
+    // // add mocktoken
+    // artfiWhitelist.connect(owner).updateToken(this.mockToken.address, true);
+
+    // console.log(`MockToken: ${mockToken.address}`)
+    // console.log(`ArtfiNFT: ${artfiNFT.address}`)
+    // console.log(`ArtfiWhitelist: ${artfiWhitelist.address}`)
 }
 
 main().catch((error) => {
