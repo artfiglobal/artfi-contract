@@ -160,9 +160,9 @@ contract ArtfiWhitelist is Ownable, EIP712, ReentrancyGuard {
     ) external payable nonReentrant {
         require(payToken[_token], "Invalid token");
 
-        // Whitelist storage info = whitelist[_whitelist];
-        // require(info.startTime <= block.timestamp && 
-        //     info.startTime + info.lockTime >= block.timestamp, "Invalid whitelist");
+        Whitelist storage info = whitelist[_whitelist];
+        require(info.startTime <= block.timestamp && 
+            info.startTime + info.lockTime >= block.timestamp, "Invalid whitelist");
 
         string[] memory fractions = _fractions.split(",");
         uint256 _amount = fractions.length;
