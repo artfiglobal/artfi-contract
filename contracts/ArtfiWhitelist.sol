@@ -19,6 +19,17 @@ contract ArtfiWhitelist is Ownable, EIP712, ReentrancyGuard {
     mapping(bytes32 => Whitelist) public whitelist;
     // user_address => whitelistID => userinfo
     mapping(address => mapping(bytes32 => UserInfo)) public userInfo;
+
+    ArtfiNFT public immutable artfiNFT;
+
+    uint public taxPercent;
+    uint public creatorPercent;
+
+    address public treasury;
+    address public artfiClaim;
+    address public constant wmatic = 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270;
+
+    address private whitelister;
     
     struct NftMeta {
         uint fraction;
@@ -27,6 +38,7 @@ contract ArtfiWhitelist is Ownable, EIP712, ReentrancyGuard {
     }
 
     struct Whitelist {
+        address creator;
         uint startTime;
         uint lockTime;
         uint maxFraction;
@@ -46,15 +58,6 @@ contract ArtfiWhitelist is Ownable, EIP712, ReentrancyGuard {
         Mint,
         Redeposit
     }
-
-    ArtfiNFT public immutable artfiNFT;
-
-    uint public taxPercent;
-
-    address public treasury;
-    address public constant wmatic = 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270;
-
-    address private whitelister;
 
     event AddWhitelist(Whitelist whitelist);
     event Mint(address indexed user, bytes32 whitelist);
@@ -84,9 +87,27 @@ contract ArtfiWhitelist is Ownable, EIP712, ReentrancyGuard {
     /**
      * @notice Set treasury
      * @param _treasury  address of treasury wallet
+     * @param _artfiClaim  address of claim contract
      */
-    function setTreasury(address _treasury) external onlyOwner {
+    function setTreasury(
+        address _treasury,
+        address _artfiClaim
+    ) external onlyOwner {
         treasury = _treasury;
+        artfiClaim = _artfiClaim;
+    }
+
+    /**
+     * @notice Set percent
+     * @param _tax  protocol percent
+     * @param _creator  creator percent
+     */
+    function setPercent(
+        uint _tax, 
+        uint _creator
+    ) external onlyOwner {
+        taxPercent = _tax;
+        creatorPercent = _creator;
     }
 
     /**
@@ -113,12 +134,47 @@ contract ArtfiWhitelist is Ownable, EIP712, ReentrancyGuard {
      * @notice Distribute assets
      * @param _token  Address of token
      * @param _amount  Amount of token
+     * @param _whitelist  whitelist id
      */
     function _distribute(
         address _token,
+        uint _amount,
+        bytes32 _whitelist
+    ) private {
+        Whitelist storage whitelistItem = whitelist[_whitelist];
+        
+        // send to creator
+        uint creatorAmt = _amount * creatorPercent / 1e4;
+        _safeTransfer(_token, whitelistItem.creator, creatorAmt);
+
+        uint protocolAmt = _amount * taxPercent / 1e4;
+        _safeTransfer(_token, treasury, protocolAmt);
+
+        unchecked {
+            _amount = _amount - protocolAmt - creatorAmt;
+        }
+        if(_amount > 0) {
+            _safeTransfer(_token, artfiClaim, _amount);
+        }
+    }
+
+    /**
+     * @notice Safely transfer token
+     * @param _token  Address of token
+     * @param _to  receiver address
+     * @param _amount  token amount
+     */
+    function _safeTransfer(
+        address _token,
+        address _to,
         uint _amount
     ) private {
-        
+        if(_token == wmatic) {
+            (bool success, ) = payable(_to).call{value: _amount}("");
+            require(success, "Failed to creator");
+        } else {
+            IERC20(_token).safeTransfer(_to, _amount);
+        }
     }
 
     /**
@@ -220,7 +276,7 @@ contract ArtfiWhitelist is Ownable, EIP712, ReentrancyGuard {
         user.stat = Stat.Mint;
 
         // distribute reward
-        _distribute(user.token, user.amount);
+        _distribute(user.token, user.amount, _whitelist);
 
         artfiNFT.mint(msg.sender, 1);
 
@@ -253,7 +309,7 @@ contract ArtfiWhitelist is Ownable, EIP712, ReentrancyGuard {
         user.token = _token;
 
         // distribute reward
-        _distribute(_token, _amount);
+        _distribute(_token, _amount, _whitelist);
 
         artfiNFT.mint(msg.sender, 1);
 
